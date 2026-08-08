@@ -77,6 +77,27 @@ try{items=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){items=null}
 if(!Array.isArray(items))items=[];
 let selected=null;
 
+
+function scanBeep(){
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;
+    if(!C)return;
+    const ctx=new C();
+    const now=ctx.currentTime;
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.type="sine";
+    osc.frequency.setValueAtTime(880,now);
+    osc.frequency.exponentialRampToValueAtTime(1320,now+0.09);
+    gain.gain.setValueAtTime(0.0001,now);
+    gain.gain.exponentialRampToValueAtTime(0.16,now+0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001,now+0.16);
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.start(now);osc.stop(now+0.17);
+    setTimeout(()=>ctx.close(),250);
+  }catch(e){}
+}
+
 const $=id=>document.getElementById(id);
 const scanDialog=$("scanDialog"),digestDialog=$("digestDialog");
 
@@ -125,7 +146,7 @@ $("camera").addEventListener("change",()=>{
  const reader=new FileReader();
  reader.onload=e=>{
   const x=items.find(i=>i.id===selected);
-  if(x){x.image=e.target.result;x.arrived=true;save()}
+  if(x){x.image=e.target.result;x.arrived=true;save();scanBeep()}
   scanDialog.close();selected=null;
  };
  reader.readAsDataURL(file);
