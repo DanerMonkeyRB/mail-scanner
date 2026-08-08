@@ -51,7 +51,7 @@ input[type=file]{display:none}
 <dialog id="scanDialog">
   <div class="modal">
     <h2 id="scanHeading">Scan Mail</h2>
-    <p class="small">Scan this item whenever you receive it. Scanning does <b>not</b> automatically mark it as arrived.</p>
+    <p class="small">Scanning this item marks it as <b>ARRIVED</b>. Mail entered through the Digest stays <b>NOT ARRIVED</b> until it is scanned.</p>
     <label class="fileButton">
       📷 Scan / Take Photo
       <input id="camera" type="file" accept="image/*" capture="environment">
@@ -65,6 +65,7 @@ input[type=file]{display:none}
   <div class="modal">
     <h2>Mail Digest</h2>
     <div id="digestList"></div>
+    <button class="primary close" id="addDigest">＋ Add Mail from Digest</button>
     <button class="secondary close" id="closeDigest">Done</button>
   </div>
 </dialog>
@@ -124,7 +125,7 @@ $("camera").addEventListener("change",()=>{
  const reader=new FileReader();
  reader.onload=e=>{
   const x=items.find(i=>i.id===selected);
-  if(x){x.image=e.target.result;save()}
+  if(x){x.image=e.target.result;x.arrived=true;save()}
   scanDialog.close();selected=null;
  };
  reader.readAsDataURL(file);
@@ -139,6 +140,13 @@ $("digestBtn").onclick=()=>{
 };
 $("cancelScan").onclick=()=>scanDialog.close();
 $("closeDigest").onclick=()=>digestDialog.close();
+$("addDigest").onclick=()=>{
+  const name=prompt("Enter the mail item from the digest:");
+  if(!name || !name.trim())return;
+  items.push({id:crypto.randomUUID(),name:name.trim(),arrived:false,image:"",text:""});
+  save();
+  $("digestBtn").click();
+};
 render();
 </script>
 </body>
