@@ -51,7 +51,7 @@ input[type=file]{display:none}
 <dialog id="scanDialog">
   <div class="modal">
     <h2 id="scanHeading">Scan Mail</h2>
-    <p class="small">Scanning this item marks it as <b>ARRIVED</b>. Mail entered through the Digest stays <b>NOT ARRIVED</b> until it is scanned.</p>
+    <p class="small">Scanning this item marks it as <b>ARRIVED</b>. Mail entered through the Digest stays <b>NOT ARRIVED</b> until it is scanned.</p><p class="small" style="margin-top:8px">Note: iPhone Silent Mode can suppress webpage sounds. A normal webpage cannot override the hardware Silent Mode switch.</p>
     <label class="fileButton">
       📷 Scan / Take Photo
       <input id="camera" type="file" accept="image/*" capture="environment">
@@ -83,20 +83,39 @@ function scanBeep(){
     const C=window.AudioContext||window.webkitAudioContext;
     if(!C)return;
     const ctx=new C();
-    const now=ctx.currentTime;
-    const osc=ctx.createOscillator();
-    const gain=ctx.createGain();
-    osc.type="sine";
-    osc.frequency.setValueAtTime(740,now);
-    osc.frequency.exponentialRampToValueAtTime(880,now+0.10);
-    gain.gain.setValueAtTime(0.0001,now);
-    gain.gain.exponentialRampToValueAtTime(0.18,now+0.02);
-    gain.gain.setValueAtTime(0.18,now+0.65);
-    gain.gain.exponentialRampToValueAtTime(0.0001,now+0.82);
-    osc.connect(gain);gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now+0.84);
-    setTimeout(()=>ctx.close(),1000);
+
+    const playTone=(frequency, volume)=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      const now=ctx.currentTime;
+
+      osc.type="sine";
+      osc.frequency.setValueAtTime(frequency,now);
+
+      gain.gain.setValueAtTime(0.0001,now);
+      gain.gain.exponentialRampToValueAtTime(volume,now+0.015);
+      gain.gain.setValueAtTime(volume,now+0.34);
+      gain.gain.exponentialRampToValueAtTime(0.0001,now+0.48);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now+0.5);
+    };
+
+    const start=()=>{
+      // Stronger synthesized delivery-scanner-style confirmation tone.
+      playTone(950,0.55);
+      playTone(1900,0.12);
+    };
+
+    if(ctx.state==="suspended"){
+      ctx.resume().then(start).catch(()=>{});
+    }else{
+      start();
+    }
+
+    setTimeout(()=>ctx.close(),650);
   }catch(e){}
 }
 
